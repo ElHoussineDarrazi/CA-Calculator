@@ -1,5 +1,5 @@
 {
-  "name": "ca-portage",
+  "name": "ca-calculator",
   "version": "1.0.0",
   "description": "Suivi du chiffre d'affaires en portage salarial",
   "main": "electron/main.cjs",
@@ -11,8 +11,8 @@
     "start": "env -u ELECTRON_RUN_AS_NODE electron ."
   },
   "build": {
-    "appId": "com.caportage.app",
-    "productName": "CA Portage",
+    "appId": "com.ca-calculator.app",
+    "productName": "CA Calculator",
     "mac": {
       "category": "public.app-category.finance",
       "target": "dmg"

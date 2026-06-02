@@ -38,7 +38,7 @@ export default function App() {
         }
       } else {
         try {
-          const saved = JSON.parse(localStorage.getItem('ca-portage-data') || 'null');
+          const saved = JSON.parse(localStorage.getItem('ca-calculator-data') || 'null');
           if (saved?.clients?.length) {
             initial = {
               clients: saved.clients,
@@ -182,7 +182,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>CA Portage</h1>
+        <h1>CA Calculator</h1>
         <div className="header-actions">
           <div className="global-summary">
             <HeaderSummaryItem

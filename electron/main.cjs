@@ -11,7 +11,7 @@ function createWindow() {
     height: 750,
     minWidth: 900,
     minHeight: 600,
-    title: 'CA Portage',
+    title: 'CA Calculator',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,

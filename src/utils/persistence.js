@@ -13,7 +13,7 @@ export async function loadAppData() {
     return window.electronAPI.loadData();
   }
   try {
-    return JSON.parse(localStorage.getItem('ca-portage-data') || 'null');
+    return JSON.parse(localStorage.getItem('ca-calculator-data') || 'null');
   } catch {
     return null;
   }
@@ -24,7 +24,7 @@ export async function persistAppData(data) {
   if (window.electronAPI) {
     await window.electronAPI.saveData(snapshot);
   } else {
-    localStorage.setItem('ca-portage-data', JSON.stringify(snapshot));
+    localStorage.setItem('ca-calculator-data', JSON.stringify(snapshot));
   }
   return snapshot;
 }

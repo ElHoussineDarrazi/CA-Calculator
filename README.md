@@ -1,4 +1,4 @@
-# CA Portage
+# CA Calculator
 
 Application desktop pour suivre votre chiffre d'affaires en portage salarial.
 
