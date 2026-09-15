@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { isFirebaseConfigured } from '../firebase/env';
+import { allowedEmail, isFirebaseConfigured } from '../firebase/env';
 
 /**
  * Charge le module d'authentification (et donc le SDK Firebase) à la demande,
@@ -44,6 +44,18 @@ export default function AuthGate({ children }) {
       if (cancelled) return;
 
       unsubscribe = subscribeAuthState((nextUser) => {
+        // Mode mono-utilisateur : un autre compte connecté est aussitôt
+        // déconnecté (défense côté client — voir aussi firestore.rules).
+        if (nextUser && allowedEmail && (nextUser.email || '').toLowerCase() !== allowedEmail) {
+          loadAuthModule().then(({ signOutUser }) => signOutUser().catch(() => {}));
+          setUser(null);
+          setMessage({
+            type: 'error',
+            text: "Ce compte n'est pas autorisé à accéder à cette application.",
+          });
+          setReady(true);
+          return;
+        }
         setUser(nextUser);
         setReady(true);
       });
@@ -81,11 +93,22 @@ export default function AuthGate({ children }) {
 
       try {
         if (isSignIn) {
-          await signIn(email.trim(), password);
+          const credential = await signIn(email.trim(), password);
+          // Mode mono-utilisateur : refuser tout autre compte immédiatement.
+          if (allowedEmail && (credential.user?.email || '').toLowerCase() !== allowedEmail) {
+            const { signOutUser } = await loadAuthModule();
+            await signOutUser().catch(() => {});
+            setMessage({
+              type: 'error',
+              text: "Ce compte n'est pas autorisé à accéder à cette application.",
+            });
+          } else {
+            setPassword('');
+          }
         } else {
           await signUp(email.trim(), password);
+          setPassword('');
         }
-        setPassword('');
       } catch (error) {
         setMessage({ type: 'error', text: translateAuthError(error) });
       }

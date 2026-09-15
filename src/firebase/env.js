@@ -28,3 +28,13 @@ export const firebaseConfig = {
 export const isFirebaseConfigured = Boolean(
   firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId,
 );
+
+/**
+ * E-mail unique autorisé à se connecter (mode mono-utilisateur).
+ * Vide = tout compte authentifié peut se connecter (comportement actuel).
+ * Renseignez `VITE_FIREBASE_ALLOWED_EMAIL` dans `.env.local` et dans les
+ * Repository variables GitHub pour n'autoriser que votre compte.
+ */
+export const allowedEmail = (
+  import.meta.env.VITE_FIREBASE_ALLOWED_EMAIL || ''
+).trim().toLowerCase();

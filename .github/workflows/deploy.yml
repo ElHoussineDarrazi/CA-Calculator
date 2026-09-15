@@ -32,10 +32,12 @@ jobs:
 
       - name: Check Firebase vars (masked)
         run: |
-          for v in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_APP_ID; do
+          for v in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_APP_ID VITE_FIREBASE_ALLOWED_EMAIL; do
             val="${!v}"
             if [ -z "$val" ]; then
               echo "$v=MISSING (empty or undefined)"
+            elif [ "$v" = "VITE_FIREBASE_ALLOWED_EMAIL" ]; then
+              echo "$v=SET (hidden — single-user mode ON)"
             else
               echo "$v=SET len=${#val} prefix=${val:0:4}…"
             fi
@@ -47,6 +49,7 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_ALLOWED_EMAIL: ${{ vars.VITE_FIREBASE_ALLOWED_EMAIL }}
 
       - name: Build (web)
         run: npm run build
@@ -57,6 +60,7 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_ALLOWED_EMAIL: ${{ vars.VITE_FIREBASE_ALLOWED_EMAIL }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
