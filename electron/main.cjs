@@ -2,6 +2,11 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+const STORAGE_DIR_NAME = 'ca-portage';
+const LEGACY_DATA_DIRS = ['ca-portage', 'ca-calculator', 'CA Calculator'];
+
+app.setPath('userData', path.join(app.getPath('appData'), STORAGE_DIR_NAME));
+
 const isDev = !app.isPackaged;
 const dataPath = path.join(app.getPath('userData'), 'clients.json');
 
@@ -27,14 +32,36 @@ function createWindow() {
   }
 }
 
-function readData() {
+function tryReadJson(filePath) {
   try {
-    if (fs.existsSync(dataPath)) {
-      return JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    if (fs.existsSync(filePath)) {
+      return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     }
   } catch {
     // ignore corrupted file
   }
+  return null;
+}
+
+function readData() {
+  const current = tryReadJson(dataPath);
+  if (current?.clients?.length) {
+    return current;
+  }
+
+  const appData = app.getPath('appData');
+  for (const dir of LEGACY_DATA_DIRS) {
+    const legacyPath = path.join(appData, dir, 'clients.json');
+    if (path.resolve(legacyPath) === path.resolve(dataPath)) continue;
+
+    const legacy = tryReadJson(legacyPath);
+    if (legacy?.clients?.length) {
+      writeData(legacy);
+      return legacy;
+    }
+  }
+
+  if (current) return current;
   return { clients: [], activeClientId: null };
 }
 

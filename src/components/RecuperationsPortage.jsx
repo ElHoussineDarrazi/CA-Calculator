@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatCurrency, sortRecuperationsByDate, toInt } from '../utils/calculations';
+import { formatCurrency, sortRecuperationsByDate, toNumber } from '../utils/calculations';
 import { confirmDelete } from '../utils/confirm';
 
 export default function RecuperationsPortage({ client, total, onUpdateClient }) {
@@ -82,10 +82,10 @@ export default function RecuperationsPortage({ client, total, onUpdateClient }) 
                     <input
                       type="number"
                       min="0"
-                      step="1"
+                      step="0.01"
                       value={entry.amount || ''}
                       onChange={(e) =>
-                        updateEntry(entry.id, { amount: toInt(e.target.value) })
+                        updateEntry(entry.id, { amount: toNumber(e.target.value) })
                       }
                       placeholder="0"
                       aria-label="Montant récupéré"

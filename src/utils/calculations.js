@@ -1,16 +1,14 @@
-/** Convertit en entier (troncature, jamais d'arrondi). */
-export function toInt(value) {
+export function toNumber(value) {
   const n = Number(value);
-  if (!Number.isFinite(n)) return 0;
-  return Math.trunc(n);
+  return Number.isFinite(n) ? n : 0;
 }
 
-/** Montant entier : TJM × jours × % (calcul sans virgule flottante). */
+/** Montant : (TJM × jours travaillés) × reste en % */
 export function calculateAmount(tjm, daysWorked, commissionPercent) {
-  const tjmValue = toInt(tjm);
-  const days = toInt(daysWorked);
-  const commissionTenths = Math.round((Number(commissionPercent) || 0) * 10);
-  return Math.trunc((tjmValue * days * commissionTenths) / 1000);
+  const tjmValue = toNumber(tjm);
+  const days = toNumber(daysWorked);
+  const commission = toNumber(commissionPercent);
+  return (tjmValue * days * commission) / 100;
 }
 
 export function getMonthRestePercent(client, monthKey) {
@@ -47,9 +45,9 @@ export function formatCurrency(amount) {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency: 'EUR',
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
     minimumFractionDigits: 0,
-  }).format(toInt(amount));
+  }).format(toNumber(amount));
 }
 
 export function generateMonthKey(year, month) {
@@ -115,13 +113,13 @@ export function sortRecuperationsByDate(entries) {
     const dateA = a.date || '';
     const dateB = b.date || '';
     if (dateA !== dateB) return dateA.localeCompare(dateB);
-    return toInt(a.amount) - toInt(b.amount);
+    return toNumber(a.amount) - toNumber(b.amount);
   });
 }
 
 export function sumRecuperationsPortage(client) {
   const list = client.recuperationsPortage || [];
-  return list.reduce((sum, entry) => sum + toInt(entry.amount), 0);
+  return list.reduce((sum, entry) => sum + toNumber(entry.amount), 0);
 }
 
 export function normalizeClient(client) {
@@ -131,7 +129,7 @@ export function normalizeClient(client) {
       recuperationsPortage: sortRecuperationsByDate(client.recuperationsPortage),
     };
   }
-  const legacy = toInt(client.recupererPortage);
+  const legacy = toNumber(client.recupererPortage);
   return {
     ...client,
     recuperationsPortage:
@@ -150,7 +148,7 @@ export function normalizeClient(client) {
 export function summarizeClient(client) {
   const { totalMontant, paid, unpaid } = sumMontants(client);
   const recupererPortage = sumRecuperationsPortage(client);
-  const restePortage = toInt(paid) - recupererPortage;
+  const restePortage = paid - recupererPortage;
 
   return { total: totalMontant, paid, unpaid, recupererPortage, restePortage };
 }

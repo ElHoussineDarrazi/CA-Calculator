@@ -4,7 +4,7 @@ import {
   getMonthRestePercent,
   getMonthsFromStart,
   summarizeClient,
-  toInt,
+  toNumber,
 } from '../utils/calculations';
 import RecuperationsPortage from './RecuperationsPortage';
 
@@ -52,7 +52,7 @@ export default function ClientPanel({ client, onUpdateClient, onUpdateMonth }) {
             min="0"
             step="10"
             value={client.tjm || ''}
-            onChange={(e) => onUpdateClient(client.id, { tjm: toInt(e.target.value) })}
+            onChange={(e) => onUpdateClient(client.id, { tjm: toNumber(e.target.value) })}
             placeholder="500"
           />
         </div>
@@ -145,11 +145,11 @@ export default function ClientPanel({ client, onUpdateClient, onUpdateMonth }) {
                         type="number"
                         min="0"
                         max="31"
-                        step="1"
+                        step="0.5"
                         value={entry.daysWorked || ''}
                         onChange={(e) =>
                           onUpdateMonth(client.id, month.key, {
-                            daysWorked: toInt(e.target.value),
+                            daysWorked: toNumber(e.target.value),
                           })
                         }
                       />

@@ -27,6 +27,35 @@ npm run electron:build
 
 Le fichier `.dmg` sera généré dans le dossier `release/`.
 
+## Version web (GitHub Pages)
+
+L'application est aussi accessible en ligne, sans installation, via GitHub Pages :
+
+```
+https://elhoussinedarrazi.github.io/CA-Calculator/
+```
+
+Le déploiement est automatique : à chaque `push` sur `main`, le workflow
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) construit la version
+web (`npm run build`) et la publie sur GitHub Pages.
+
+En mode web, les données sont sauvegardées dans le **localStorage** du navigateur
+(au lieu du fichier local utilisé par la version desktop).
+
+### Activer GitHub Pages (une seule fois)
+
+1. Aller sur le dépôt GitHub → **Settings** → **Pages**.
+2. Dans **Build and deployment** → **Source**, choisir **GitHub Actions**.
+3. Pousser un commit sur `main` (ou lancer le workflow manuellement depuis
+   l'onglet **Actions**) : le site est publié automatiquement.
+
+### Tester la version web en local
+
+```bash
+npm run build
+npm run preview
+```
+
 ## Formule
 
 ```
