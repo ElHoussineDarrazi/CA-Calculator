@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:web": "VITE_WEB_READONLY=true vite build && mv dist/web.html dist/index.html",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && env -u ELECTRON_RUN_AS_NODE electron .\"",
     "electron:build": "vite build && env -u ELECTRON_RUN_AS_NODE electron-builder",
