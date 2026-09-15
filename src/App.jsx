@@ -9,48 +9,44 @@ import {
   normalizeClient,
 } from './utils/calculations';
 import { confirmDelete } from './utils/confirm';
+import { isFirebaseConfigured } from './firebase/env';
 import {
+  clearCloudPushPending,
   cloneAppData,
+  getLastSyncError,
+  isCloudPushPending,
+  loadAppData,
   persistActiveClientId,
   persistAppData,
   serializeClientsData,
 } from './utils/persistence';
+import { downloadDataFile, mergeImportedClients, readDataFile } from './utils/transfer';
 
 const defaultData = { clients: [], activeClientId: null };
 
-export default function App() {
+export default function App({ authUser = null }) {
   const [data, setData] = useState(defaultData);
   const [loaded, setLoaded] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [cloudPending, setCloudPending] = useState(false);
+  const [syncError, setSyncError] = useState(null);
+  const [transferNotice, setTransferNotice] = useState(null);
   const lastSavedRef = useRef(null);
+  const isDirtyRef = useRef(false);
+  const dataRef = useRef(data);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     async function load() {
-      let initial = null;
+      const saved = await loadAppData();
 
-      if (window.electronAPI) {
-        const saved = await window.electronAPI.loadData();
-        if (saved?.clients?.length) {
-          initial = {
-            clients: saved.clients,
-            activeClientId: saved.activeClientId || saved.clients[0].id,
-          };
-        }
+      let initial;
+      if (saved?.clients?.length) {
+        initial = {
+          clients: saved.clients,
+          activeClientId: saved.activeClientId || saved.clients[0].id,
+        };
       } else {
-        try {
-          const saved = JSON.parse(localStorage.getItem('ca-calculator-data') || 'null');
-          if (saved?.clients?.length) {
-            initial = {
-              clients: saved.clients,
-              activeClientId: saved.activeClientId || saved.clients[0].id,
-            };
-          }
-        } catch {
-          // ignore corrupted local storage
-        }
-      }
-
-      if (!initial) {
         const client = createEmptyClient();
         initial = { clients: [client], activeClientId: client.id };
       }
@@ -62,6 +58,7 @@ export default function App() {
 
       setData(initial);
       lastSavedRef.current = cloneAppData(initial);
+      setCloudPending(isCloudPushPending());
       setLoaded(true);
     }
     load();
@@ -72,12 +69,119 @@ export default function App() {
     lastSavedRef.current != null &&
     serializeClientsData(data) !== serializeClientsData(lastSavedRef.current);
 
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  // Synchronisation temps réel Firestore : desktop ↔ web ↔ mobile.
+  useEffect(() => {
+    if (!isFirebaseConfigured || !authUser || !loaded) return undefined;
+
+    let unsubscribeRemote = () => {};
+    let cancelled = false;
+
+    import('./utils/storage/remoteAdapter').then(({ subscribeRemoteData }) => {
+      if (cancelled) return;
+
+      unsubscribeRemote = subscribeRemoteData(authUser.uid, ({ clients }) => {
+        // Ne jamais écraser des modifications locales non enregistrées.
+        if (isDirtyRef.current) return;
+
+        const normalized = clients.map(normalizeClient);
+        const previous = dataRef.current;
+        const next = {
+          clients: normalized,
+          activeClientId: normalized.some((client) => client.id === previous.activeClientId)
+            ? previous.activeClientId
+            : normalized[0].id,
+        };
+
+        // Données issues du cloud : elles sont déjà enregistrées.
+        lastSavedRef.current = cloneAppData(next);
+        setData(next);
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribeRemote();
+    };
+  }, [loaded, authUser]);
+
+  // Les messages de transfert (export / import) disparaissent automatiquement.
+  useEffect(() => {
+    if (!transferNotice) return undefined;
+
+    const timer = setTimeout(() => setTransferNotice(null), 6000);
+    return () => clearTimeout(timer);
+  }, [transferNotice]);
+
   const handleSave = useCallback(async () => {
     const snapshot = await persistAppData(data);
     lastSavedRef.current = snapshot;
+    clearCloudPushPending();
+    setCloudPending(false);
+    setSyncError(getLastSyncError());
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 2000);
   }, [data]);
+
+  const handleExport = useCallback(() => {
+    downloadDataFile(data);
+    setTransferNotice({ type: 'success', text: 'Fichier JSON téléchargé.' });
+  }, [data]);
+
+  const handleImportClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleImportFile = useCallback(async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = ''; // autorise la réimportation du même fichier
+    if (!file) return;
+
+    try {
+      const importedClients = await readDataFile(file);
+
+      if (importedClients.length === 0) {
+        setTransferNotice({ type: 'error', text: 'Aucun client trouvé dans ce fichier.' });
+        return;
+      }
+
+      const confirmed = confirmDelete(
+        `Importer ${importedClients.length} client(s) depuis « ${file.name} » ?\n\n` +
+          'Les clients de même identifiant seront remplacés, les autres ajoutés.\n' +
+          'Cliquez ensuite sur « Enregistrer tout » pour valider.',
+      );
+      if (!confirmed) return;
+
+      setData((prev) => ({
+        clients: mergeImportedClients(prev.clients, importedClients),
+        activeClientId: prev.activeClientId,
+      }));
+      setTransferNotice({
+        type: 'success',
+        text: `${importedClients.length} client(s) importé(s). Pensez à « Enregistrer tout ».`,
+      });
+    } catch (error) {
+      setTransferNotice({
+        type: 'error',
+        text: error.message || "Échec de l'import du fichier.",
+      });
+    }
+  }, []);
+
+  const handleSignOut = useCallback(() => {
+    if (!isFirebaseConfigured) return;
+
+    import('./firebase/auth')
+      .then(({ signOutUser }) => signOutUser())
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!loaded || !isDirty) return undefined;
@@ -182,7 +286,14 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>CA Calculator</h1>
+        <div className="header-title">
+          <h1>CA Calculator</h1>
+          {isFirebaseConfigured && authUser && (
+            <span className="sync-badge" title={`Connecté : ${authUser.email}`}>
+              ☁ Synchronisé
+            </span>
+          )}
+        </div>
         <div className="header-actions">
           <div className="global-summary">
             <HeaderSummaryItem
@@ -229,6 +340,41 @@ export default function App() {
               onSelectClient={setActiveClient}
             />
           </div>
+          <div className="header-tools">
+            <button
+              type="button"
+              className="tool-btn"
+              onClick={handleExport}
+              title="Télécharger toutes les données dans un fichier JSON"
+            >
+              Exporter
+            </button>
+            <button
+              type="button"
+              className="tool-btn"
+              onClick={handleImportClick}
+              title="Importer un fichier JSON (ancien clients.json, export…)"
+            >
+              Importer
+            </button>
+            {isFirebaseConfigured && authUser && (
+              <button
+                type="button"
+                className="tool-btn"
+                onClick={handleSignOut}
+                title={`Déconnecter ${authUser.email}`}
+              >
+                Déconnexion
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden-file-input"
+              onChange={handleImportFile}
+            />
+          </div>
           <div className="save-area">
             {isDirty && !justSaved && (
               <span className="unsaved-hint" title="Tous les onglets clients">
@@ -250,6 +396,27 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {(cloudPending || syncError || transferNotice) && (
+        <div className="app-banners">
+          {cloudPending && (
+            <div className="banner banner-info">
+              Vos données locales ne sont pas encore dans le cloud. Cliquez sur « Enregistrer
+              tout » pour les synchroniser.
+            </div>
+          )}
+          {syncError && <div className="banner banner-error">{syncError}</div>}
+          {transferNotice && (
+            <div
+              className={`banner ${
+                transferNotice.type === 'error' ? 'banner-error' : 'banner-success'
+              }`}
+            >
+              {transferNotice.text}
+            </div>
+          )}
+        </div>
+      )}
 
       <TabBar
         clients={data.clients}

@@ -1,3 +1,5 @@
+import { createId } from './uuid';
+
 export function toNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -97,7 +99,7 @@ export function getMonthsFromStart(startDateStr, endDateStr = '') {
 
 export function createEmptyClient(name = 'Nouveau client') {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     name,
     startDate: new Date().toISOString().slice(0, 10),
     endDate: '',
@@ -136,7 +138,7 @@ export function normalizeClient(client) {
       legacy > 0
         ? [
             {
-              id: crypto.randomUUID(),
+              id: createId(),
               amount: legacy,
               date: new Date().toISOString().slice(0, 10),
             },

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { formatCurrency, sortRecuperationsByDate, toNumber } from '../utils/calculations';
 import { confirmDelete } from '../utils/confirm';
+import { createId } from '../utils/uuid';
 
 export default function RecuperationsPortage({ client, total, onUpdateClient }) {
   const [expanded, setExpanded] = useState(false);
@@ -15,7 +16,7 @@ export default function RecuperationsPortage({ client, total, onUpdateClient }) 
     setEntries([
       ...entries,
       {
-        id: crypto.randomUUID(),
+        id: createId(),
         amount: 0,
         date: new Date().toISOString().slice(0, 10),
       },

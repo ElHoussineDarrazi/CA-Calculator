@@ -29,15 +29,15 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",
     "concurrently": "^10.0.0",
     "electron": "^42.3.0",
     "electron-builder": "^26.8.1",
+    "firebase": "^12.19.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "vite": "^8.0.14",
     "wait-on": "^9.0.10"
   }
