@@ -1000,6 +1000,15 @@ button {
   font-size: 0.95rem;
 }
 
+.dash-ended-badge {
+  cursor: help;
+}
+
+.dash-client-dates {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
 .dash-client-card p {
   margin: 0.15rem 0;
   font-size: 0.85rem;

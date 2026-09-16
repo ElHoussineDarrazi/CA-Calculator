@@ -26,6 +26,14 @@ function formatRecupDate(dateStr) {
   return date.toLocaleDateString('fr-FR');
 }
 
+/** Format JJ/MM/AAAA pour les dates de début / fin de mission. */
+function formatClientDate(dateStr) {
+  if (!dateStr) return null;
+  const date = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('fr-FR');
+}
+
 export default function Dashboard({ clients }) {
   const normalized = useMemo(() => clients || [], [clients]);
 
@@ -37,10 +45,15 @@ export default function Dashboard({ clients }) {
     () =>
       normalized.map((client) => {
         const summary = summarizeClient(client);
+        const startDate = formatClientDate(client.startDate);
+        const endDate = formatClientDate(client.endDate);
         return {
           id: client.id,
           name: client.name?.trim() || 'Sans nom',
           ...summary,
+          startDate,
+          endDate,
+          hasEndDate: Boolean(endDate),
           recuperations: sortRecuperationsByDate(client.recuperationsPortage || []),
         };
       }),
@@ -85,7 +98,19 @@ export default function Dashboard({ clients }) {
         <div className="dash-clients">
           {perClient.map((c) => (
             <div key={c.id} className="dash-client-card">
-              <h3>{c.name}</h3>
+              <h3>
+                {c.name}
+                {c.hasEndDate && (
+                  <span className="dash-ended-badge" title={`Mission terminée le ${c.endDate}`}>
+                    {' '}🏁
+                  </span>
+                )}
+              </h3>
+              {(c.startDate || c.endDate) && (
+                <p className="dash-client-dates">
+                  {c.startDate || '…'} → {c.endDate || 'en cours'}
+                </p>
+              )}
               <p>
                 Total : <strong>{formatCurrency(c.total)}</strong>
               </p>
