@@ -1006,6 +1006,32 @@ button {
   color: #475569;
 }
 
+.dash-progress {
+  margin: 0.5rem 0 0.35rem;
+}
+
+.dash-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.dash-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0ea5e9, #2563eb);
+  transition: width 0.3s ease;
+}
+
+.dash-progress-label {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
 .dash-recup-list {
   margin: 0.4rem 0 0;
   padding: 0.4rem 0 0 1.1rem;

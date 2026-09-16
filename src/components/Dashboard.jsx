@@ -96,6 +96,26 @@ export default function Dashboard({ clients }) {
                 Récupéré : {formatCurrency(c.recupererPortage)} · Reste à récupérer :{' '}
                 {formatCurrency(c.restePortage)}
               </p>
+              {(() => {
+                const percent = c.paid > 0 ? Math.min(100, (c.recupererPortage / c.paid) * 100) : 0;
+                const rounded = Math.round(percent);
+                return (
+                  <div
+                    className="dash-progress"
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={rounded}
+                    aria-label={`Récupéré ${rounded} % pour ${c.name}`}
+                    title={`Récupéré ${formatCurrency(c.recupererPortage)} sur ${formatCurrency(c.paid)} payé (${rounded} %)`}
+                  >
+                    <div className="dash-progress-track">
+                      <div className="dash-progress-fill" style={{ width: `${percent}%` }} />
+                    </div>
+                    <span className="dash-progress-label">{rounded} % récupéré</span>
+                  </div>
+                );
+              })()}
               {c.recuperations.length > 0 && (
                 <ul className="dash-recup-list">
                   {c.recuperations.map((entry, index) => (
