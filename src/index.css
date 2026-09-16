@@ -1006,6 +1006,18 @@ button {
   color: #475569;
 }
 
+.dash-recup-list {
+  margin: 0.4rem 0 0;
+  padding: 0.4rem 0 0 1.1rem;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.dash-recup-list li {
+  margin: 0.1rem 0;
+}
+
 .dash-empty {
   color: #64748b;
   font-size: 0.9rem;

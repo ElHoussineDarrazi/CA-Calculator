@@ -11,17 +11,41 @@
  */
 import { useMemo } from 'react';
 import {
-  computeClientSummaries,
   computeGlobalSummary,
   formatCurrency,
+  sortRecuperationsByDate,
+  summarizeClient,
 } from '../utils/calculations';
 import HeaderSummaryItem from './HeaderSummaryItem';
+
+/** Format JJ/MM/AAAA pour les dates de récupération (stockées en AAAA-MM-JJ). */
+function formatRecupDate(dateStr) {
+  if (!dateStr) return 'Date inconnue';
+  const date = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('fr-FR');
+}
 
 export default function Dashboard({ clients }) {
   const normalized = useMemo(() => clients || [], [clients]);
 
   const global = useMemo(() => computeGlobalSummary(normalized), [normalized]);
-  const perClient = useMemo(() => computeClientSummaries(normalized), [normalized]);
+
+  // Détail par client : mêmes totaux que le desktop + liste des montants
+  // récupérés (date + montant, triés par date). Lecture seule.
+  const perClient = useMemo(
+    () =>
+      normalized.map((client) => {
+        const summary = summarizeClient(client);
+        return {
+          id: client.id,
+          name: client.name?.trim() || 'Sans nom',
+          ...summary,
+          recuperations: sortRecuperationsByDate(client.recuperationsPortage || []),
+        };
+      }),
+    [normalized],
+  );
 
   // Les 5 mêmes indicateurs que le header desktop (App.jsx), avec le même
   // détail par client au survol — en lecture seule (pas de navigation).
@@ -72,6 +96,15 @@ export default function Dashboard({ clients }) {
                 Récupéré : {formatCurrency(c.recupererPortage)} · Reste à récupérer :{' '}
                 {formatCurrency(c.restePortage)}
               </p>
+              {c.recuperations.length > 0 && (
+                <ul className="dash-recup-list">
+                  {c.recuperations.map((entry, index) => (
+                    <li key={entry.id || index}>
+                      {formatRecupDate(entry.date)} : {formatCurrency(entry.amount)}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </div>
