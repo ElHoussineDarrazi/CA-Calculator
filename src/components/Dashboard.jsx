@@ -4,8 +4,8 @@
  * Affiche les mêmes indicateurs que l'application desktop
  * (voir `App.jsx` : Total CA, Payé, Reste à facturer, Récupéré portage,
  * Reste portage — calculés par `computeGlobalSummary` / `computeClientSummaries`),
- * avec le même détail par client au survol. S'y ajoutent uniquement des
- * compléments visuels (Payé / Non payé, cartes par client).
+ * avec le même détail par client au survol. S'y ajoute le détail par client
+ * (total, payé / non payé, récupéré / reste à récupérer).
  *
  * AUCUN bouton Modifier / Enregistrer / Importer, AUCUNE écriture.
  */
@@ -14,41 +14,14 @@ import {
   computeClientSummaries,
   computeGlobalSummary,
   formatCurrency,
-  toNumber,
 } from '../utils/calculations';
 import HeaderSummaryItem from './HeaderSummaryItem';
-
-function BarChart({ data, formatValue }) {
-  const max = Math.max(1, ...data.map((d) => d.value));
-  return (
-    <div className="dash-chart">
-      {data.map((d) => (
-        <div key={d.key} className="dash-bar-group" title={`${d.label} : ${formatValue(d.value)}`}>
-          <div
-            className={`dash-bar ${d.secondary ? 'secondary' : ''}`}
-            style={{ height: `${Math.max(3, Math.round((d.value / max) * 140))}px` }}
-          />
-          <span className="dash-bar-label">{d.shortLabel}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function Dashboard({ clients }) {
   const normalized = useMemo(() => clients || [], [clients]);
 
   const global = useMemo(() => computeGlobalSummary(normalized), [normalized]);
   const perClient = useMemo(() => computeClientSummaries(normalized), [normalized]);
-
-  // Répartition payé / non payé pour le graphique complémentaire.
-  const split = useMemo(
-    () => [
-      { key: 'paid', label: 'Payé', shortLabel: 'Payé', value: toNumber(global.paid) },
-      { key: 'unpaid', label: 'Non payé', shortLabel: 'À venir', value: toNumber(global.unpaid), secondary: true },
-    ],
-    [global],
-  );
 
   // Les 5 mêmes indicateurs que le header desktop (App.jsx), avec le même
   // détail par client au survol — en lecture seule (pas de navigation).
@@ -84,11 +57,6 @@ export default function Dashboard({ clients }) {
       </section>
 
       <section className="dash-section">
-        <h2>Payé / Non payé</h2>
-        <BarChart data={split} formatValue={formatCurrency} />
-      </section>
-
-      <section className="dash-section">
         <h2>Par client</h2>
         <div className="dash-clients">
           {perClient.map((c) => (
@@ -99,6 +67,10 @@ export default function Dashboard({ clients }) {
               </p>
               <p>
                 Payé : {formatCurrency(c.paid)} · Non payé : {formatCurrency(c.unpaid)}
+              </p>
+              <p>
+                Récupéré : {formatCurrency(c.recupererPortage)} · Reste à récupérer :{' '}
+                {formatCurrency(c.restePortage)}
               </p>
             </div>
           ))}
