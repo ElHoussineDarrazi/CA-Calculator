@@ -113,7 +113,7 @@ export default function Dashboard({ clients }) {
           {perClient.map((c) => (
             <div key={c.id} className="dash-client-card">
               <h3>
-                {c.name}
+                <span className="dash-tjm-badge">{formatCurrency(c.tjm)}</span> {c.name}
                 {c.hasEndDate && (
                   <span className="dash-ended-badge" title={`Mission terminée le ${c.endDate}`}>
                     {' '}🏁
@@ -125,9 +125,6 @@ export default function Dashboard({ clients }) {
                   {c.startDate || '…'} → {c.endDate || 'en cours'}
                 </p>
               )}
-              <p>
-                TJM : <strong>{formatCurrency(c.tjm)}</strong>
-              </p>
               <p>
                 Total : <strong>{formatCurrency(c.total)}</strong>
               </p>
