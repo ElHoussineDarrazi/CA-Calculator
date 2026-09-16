@@ -1,11 +1,11 @@
 /**
  * Tableau de bord en lecture seule (version web déployée).
  *
- * Affiche EXACTEMENT les mêmes indicateurs que l'application desktop
+ * Affiche les mêmes indicateurs que l'application desktop
  * (voir `App.jsx` : Total CA, Payé, Reste à facturer, Récupéré portage,
  * Reste portage — calculés par `computeGlobalSummary` / `computeClientSummaries`),
  * avec le même détail par client au survol. S'y ajoutent uniquement des
- * graphiques (CA par mois, Payé / Non payé).
+ * compléments visuels (Payé / Non payé, cartes par client).
  *
  * AUCUN bouton Modifier / Enregistrer / Importer, AUCUNE écriture.
  */
@@ -14,8 +14,6 @@ import {
   computeClientSummaries,
   computeGlobalSummary,
   formatCurrency,
-  getMonthsFromStart,
-  getMonthMontant,
   toNumber,
 } from '../utils/calculations';
 import HeaderSummaryItem from './HeaderSummaryItem';
@@ -43,23 +41,7 @@ export default function Dashboard({ clients }) {
   const global = useMemo(() => computeGlobalSummary(normalized), [normalized]);
   const perClient = useMemo(() => computeClientSummaries(normalized), [normalized]);
 
-  // CA par mois : agrégation de tous les clients.
-  const monthly = useMemo(() => {
-    const map = new Map();
-    for (const client of normalized) {
-      for (const { key, label } of getMonthsFromStart(client.startDate, client.endDate)) {
-        const amount = getMonthMontant(client, key);
-        if (!map.has(key)) map.set(key, { key, label, value: 0 });
-        map.get(key).value += amount;
-      }
-    }
-    return [...map.values()].sort((a, b) => a.key.localeCompare(b.key)).map((m) => ({
-      ...m,
-      shortLabel: m.key.slice(2),
-    }));
-  }, [normalized]);
-
-  // Répartition payé / non payé pour le second graphique.
+  // Répartition payé / non payé pour le graphique complémentaire.
   const split = useMemo(
     () => [
       { key: 'paid', label: 'Payé', shortLabel: 'Payé', value: toNumber(global.paid) },
@@ -67,11 +49,6 @@ export default function Dashboard({ clients }) {
     ],
     [global],
   );
-
-  const tjmMoyen = useMemo(() => {
-    if (!normalized.length) return 0;
-    return normalized.reduce((s, c) => s + toNumber(c.tjm), 0) / normalized.length;
-  }, [normalized]);
 
   // Les 5 mêmes indicateurs que le header desktop (App.jsx), avec le même
   // détail par client au survol — en lecture seule (pas de navigation).
@@ -104,26 +81,6 @@ export default function Dashboard({ clients }) {
             clients={perClient}
           />
         ))}
-      </section>
-
-      <section className="dash-kpis">
-        <div className="dash-kpi">
-          <span className="dash-kpi-label">TJM moyen</span>
-          <span className="dash-kpi-value">{formatCurrency(tjmMoyen)}</span>
-        </div>
-        <div className="dash-kpi">
-          <span className="dash-kpi-label">Clients</span>
-          <span className="dash-kpi-value">{normalized.length}</span>
-        </div>
-      </section>
-
-      <section className="dash-section">
-        <h2>Chiffre d&apos;affaires par mois (tous clients)</h2>
-        {monthly.length ? (
-          <BarChart data={monthly} formatValue={formatCurrency} />
-        ) : (
-          <p className="dash-empty">Aucun mois renseigné.</p>
-        )}
       </section>
 
       <section className="dash-section">
