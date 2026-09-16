@@ -41,9 +41,22 @@ export default function Dashboard({ clients }) {
 
   // Détail par client : mêmes totaux que le desktop + liste des montants
   // récupérés (date + montant, triés par date). Lecture seule.
+  // Triés par date de démarrage croissante (les plus anciens d'abord ;
+  // les clients sans date valide sont placés en fin de liste).
   const perClient = useMemo(
     () =>
-      normalized.map((client) => {
+      [...normalized]
+        .sort((a, b) => {
+          const timeA = a?.startDate ? new Date(`${a.startDate}T00:00:00`).getTime() : NaN;
+          const timeB = b?.startDate ? new Date(`${b.startDate}T00:00:00`).getTime() : NaN;
+          const validA = Number.isFinite(timeA);
+          const validB = Number.isFinite(timeB);
+          if (validA && validB) return timeA - timeB;
+          if (validA) return -1;
+          if (validB) return 1;
+          return 0;
+        })
+        .map((client) => {
         const summary = summarizeClient(client);
         const startDate = formatClientDate(client.startDate);
         const endDate = formatClientDate(client.endDate);
