@@ -887,6 +887,23 @@ button {
   width: 100%;
 }
 
+.dash-indicators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.tooltip-client-static {
+  cursor: default;
+}
+
 .dash-kpis {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

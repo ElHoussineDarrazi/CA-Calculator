@@ -1,8 +1,12 @@
 /**
  * Tableau de bord en lecture seule (version web déployée).
  *
- * Desktop (Electron) = application complète d'édition.
- * Web (GitHub Pages, VITE_WEB_READONLY=true) = graphiques + indicateurs clés,
+ * Affiche EXACTEMENT les mêmes indicateurs que l'application desktop
+ * (voir `App.jsx` : Total CA, Payé, Reste à facturer, Récupéré portage,
+ * Reste portage — calculés par `computeGlobalSummary` / `computeClientSummaries`),
+ * avec le même détail par client au survol. S'y ajoutent uniquement des
+ * graphiques (CA par mois, Payé / Non payé).
+ *
  * AUCUN bouton Modifier / Enregistrer / Importer, AUCUNE écriture.
  */
 import { useMemo } from 'react';
@@ -14,6 +18,7 @@ import {
   getMonthMontant,
   toNumber,
 } from '../utils/calculations';
+import HeaderSummaryItem from './HeaderSummaryItem';
 
 function BarChart({ data, formatValue }) {
   const max = Math.max(1, ...data.map((d) => d.value));
@@ -68,6 +73,16 @@ export default function Dashboard({ clients }) {
     return normalized.reduce((s, c) => s + toNumber(c.tjm), 0) / normalized.length;
   }, [normalized]);
 
+  // Les 5 mêmes indicateurs que le header desktop (App.jsx), avec le même
+  // détail par client au survol — en lecture seule (pas de navigation).
+  const indicators = [
+    { label: 'Total CA', total: global.total, metric: 'total' },
+    { label: 'Payé', total: global.paid, metric: 'paid' },
+    { label: 'Reste à facturer', total: global.unpaid, metric: 'unpaid' },
+    { label: 'Récupéré portage', total: global.recupererPortage, metric: 'recupererPortage' },
+    { label: 'Reste portage', total: global.restePortage, metric: 'restePortage' },
+  ];
+
   if (!normalized.length) {
     return (
       <div className="empty-state">
@@ -79,19 +94,19 @@ export default function Dashboard({ clients }) {
 
   return (
     <div className="dash">
+      <section className="dash-indicators" aria-label="Indicateurs (identiques à l'application desktop)">
+        {indicators.map((item) => (
+          <HeaderSummaryItem
+            key={item.metric}
+            label={item.label}
+            total={item.total}
+            metric={item.metric}
+            clients={perClient}
+          />
+        ))}
+      </section>
+
       <section className="dash-kpis">
-        <div className="dash-kpi">
-          <span className="dash-kpi-label">CA total</span>
-          <span className="dash-kpi-value">{formatCurrency(global.total)}</span>
-        </div>
-        <div className="dash-kpi">
-          <span className="dash-kpi-label">Payé</span>
-          <span className="dash-kpi-value">{formatCurrency(global.paid)}</span>
-        </div>
-        <div className="dash-kpi">
-          <span className="dash-kpi-label">Non payé</span>
-          <span className="dash-kpi-value">{formatCurrency(global.unpaid)}</span>
-        </div>
         <div className="dash-kpi">
           <span className="dash-kpi-label">TJM moyen</span>
           <span className="dash-kpi-value">{formatCurrency(tjmMoyen)}</span>

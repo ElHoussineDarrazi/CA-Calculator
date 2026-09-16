@@ -11,6 +11,7 @@ export default function HeaderSummaryItem({
   onSelectClient,
 }) {
   const [open, setOpen] = useState(false);
+  const canSelect = typeof onSelectClient === 'function';
 
   return (
     <span
@@ -26,16 +27,23 @@ export default function HeaderSummaryItem({
           <ul>
             {clients.map((client) => (
               <li key={client.id}>
-                <button
-                  type="button"
-                  className={
-                    client.id === activeClientId ? 'tooltip-client active' : 'tooltip-client'
-                  }
-                  onClick={() => onSelectClient(client.id)}
-                >
-                  <span className="tooltip-client-name">{client.name}</span>
-                  <span className="tooltip-client-value">{formatCurrency(client[metric])}</span>
-                </button>
+                {canSelect ? (
+                  <button
+                    type="button"
+                    className={
+                      client.id === activeClientId ? 'tooltip-client active' : 'tooltip-client'
+                    }
+                    onClick={() => onSelectClient(client.id)}
+                  >
+                    <span className="tooltip-client-name">{client.name}</span>
+                    <span className="tooltip-client-value">{formatCurrency(client[metric])}</span>
+                  </button>
+                ) : (
+                  <span className="tooltip-client tooltip-client-static">
+                    <span className="tooltip-client-name">{client.name}</span>
+                    <span className="tooltip-client-value">{formatCurrency(client[metric])}</span>
+                  </span>
+                )}
               </li>
             ))}
           </ul>
