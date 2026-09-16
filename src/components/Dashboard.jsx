@@ -67,6 +67,7 @@ export default function Dashboard({ clients }) {
           startDate,
           endDate,
           hasEndDate: Boolean(endDate),
+          tjm: Number(client.tjm) || 0,
           recuperations: sortRecuperationsByDate(client.recuperationsPortage || []),
         };
       }),
@@ -124,6 +125,9 @@ export default function Dashboard({ clients }) {
                   {c.startDate || '…'} → {c.endDate || 'en cours'}
                 </p>
               )}
+              <p>
+                TJM : <strong>{formatCurrency(c.tjm)}</strong>
+              </p>
               <p>
                 Total : <strong>{formatCurrency(c.total)}</strong>
               </p>
