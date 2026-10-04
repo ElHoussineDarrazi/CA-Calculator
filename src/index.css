@@ -413,6 +413,36 @@ button {
   color: #2563eb;
 }
 
+.summary-card.days-restants .value {
+  color: #0f766e;
+}
+
+.summary-card.days-restants .sub {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.form-group .field-label,
+.computed-field {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.computed-field {
+  display: block;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+  color: #0f766e;
+  background: #f0fdfa;
+  border: 1px dashed #99f6e4;
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+}
+
 .months-table {
   background: #fff;
   border-radius: 12px;
@@ -1052,6 +1082,19 @@ button {
 .dash-client-payment {
   font-size: 0.8rem;
   color: #64748b;
+}
+
+.dash-client-days {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.dash-client-days .days-ok {
+  color: #0f766e;
+}
+
+.dash-client-days .days-over {
+  color: #dc2626;
 }
 
 .dash-client-card p {

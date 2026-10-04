@@ -132,6 +132,13 @@ export default function Dashboard({ clients }) {
               <p className="dash-client-payment">
                 Délai de paiement : <strong>{c.paymentDays} jours</strong>
               </p>
+              <p className="dash-client-days">
+                Jours autorisés/an : <strong>{c.authorizedDays || '—'}</strong> · Travaux :{' '}
+                <strong>{c.daysWorked}</strong> · Restants :{' '}
+                <strong className={c.remainingDays === null ? '' : c.remainingDays < 0 ? 'days-over' : 'days-ok'}>
+                  {c.remainingDays === null ? '—' : `${c.remainingDays} j`}
+                </strong>
+              </p>
               <p>
                 Total : <strong>{formatCurrency(c.total)}</strong>
               </p>

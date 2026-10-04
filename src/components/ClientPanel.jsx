@@ -3,6 +3,8 @@ import {
   formatCurrency,
   getMonthMontant,
   getPaymentDays,
+  getAuthorizedDays,
+  getRemainingDays,
   getMonthRestePercent,
   getMonthsFromStart,
   summarizeClient,
@@ -94,6 +96,37 @@ export default function ClientPanel({ client, onUpdateClient, onUpdateMonth }) {
             <option value="60" />
           </datalist>
         </div>
+        <div className="form-group">
+          <label htmlFor="authorized-days">Jours autorisés par an</label>
+          <input
+            id="authorized-days"
+            type="number"
+            min="0"
+            step="0.5"
+            list="authorized-days-options"
+            value={client.authorizedDaysPerYear || ''}
+            onChange={(e) =>
+              onUpdateClient(client.id, {
+                authorizedDaysPerYear: toNumber(e.target.value),
+              })
+            }
+            placeholder="220"
+          />
+          <datalist id="authorized-days-options">
+            <option value="200" />
+            <option value="210" />
+            <option value="220" />
+            <option value="230" />
+          </datalist>
+        </div>
+        <div className="form-group">
+          <span className="field-label">Jours restants (calculé)</span>
+          <output className="computed-field" aria-live="polite">
+            {getAuthorizedDays(client) > 0
+              ? `${getRemainingDays(client)} jour(s) restants (${summary.daysWorked} / ${getAuthorizedDays(client)})`
+              : 'Renseignez un quota annuel pour calculer le reste'}
+          </output>
+        </div>
       </div>
 
       <p className="formula-hint">
@@ -125,7 +158,21 @@ export default function ClientPanel({ client, onUpdateClient, onUpdateMonth }) {
           <div className="label">Reste portage</div>
           <div className="value">{formatCurrency(summary.restePortage)}</div>
         </div>
+        <div className="summary-card days-restants">
+          <div className="label">Jours restants</div>
+          <div className="value">
+            {summary.remainingDays === null ? '—' : `${summary.remainingDays} j`}
+          </div>
+          <div className="sub">
+            {summary.daysWorked} / {summary.authorizedDays || '—'} jours autorisés/an
+          </div>
+        </div>
       </div>
+
+      <p className="formula-hint">
+        Jours restants = jours autorisés par an − total des jours travaillés (somme des jours
+        saisis dans le tableau des mois)
+      </p>
 
       <p className="formula-hint">
         Reste portage = Payé par le client − Récupéré portage (somme des récupérations)
@@ -217,7 +264,7 @@ export default function ClientPanel({ client, onUpdateClient, onUpdateMonth }) {
             <tfoot>
               <tr className="total-row">
                 <td>Total</td>
-                <td />
+                <td>{summary.daysWorked}</td>
                 <td />
                 <td className="amount">{formatCurrency(summary.total)}</td>
                 <td />
