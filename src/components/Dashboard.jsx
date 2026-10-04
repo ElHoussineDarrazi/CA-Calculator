@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import {
   computeGlobalSummary,
   formatCurrency,
+  getPaymentDays,
   sortRecuperationsByDate,
   summarizeClient,
 } from '../utils/calculations';
@@ -66,8 +67,11 @@ export default function Dashboard({ clients }) {
           ...summary,
           startDate,
           endDate,
+          // Date de contrat brute, pour aligner le tri des tooltips sur la web app.
+          startDateSort: client.startDate || '',
           hasEndDate: Boolean(endDate),
           tjm: Number(client.tjm) || 0,
+          paymentDays: getPaymentDays(client),
           recuperations: sortRecuperationsByDate(client.recuperationsPortage || []),
         };
       }),
@@ -125,6 +129,9 @@ export default function Dashboard({ clients }) {
                   {c.startDate || '…'} → {c.endDate || 'en cours'}
                 </p>
               )}
+              <p className="dash-client-payment">
+                Délai de paiement : <strong>{c.paymentDays} jours</strong>
+              </p>
               <p>
                 Total : <strong>{formatCurrency(c.total)}</strong>
               </p>

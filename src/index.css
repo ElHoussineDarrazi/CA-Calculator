@@ -247,6 +247,13 @@ button {
   background: rgba(255, 255, 255, 0.6);
 }
 
+.tab-paid-dot {
+  color: #16a34a;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: help;
+}
+
 .tab.active {
   background: #fff;
   color: #1a1a2e;
@@ -289,6 +296,27 @@ button {
   border-color: #1a1a2e;
   color: #1a1a2e;
   background: rgba(255, 255, 255, 0.5);
+}
+
+.tab-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  padding-left: 1rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tab-sort select {
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #1a1a2e;
+  font-size: 0.8rem;
 }
 
 .client-panel {
@@ -1018,6 +1046,11 @@ button {
 
 .dash-client-dates {
   font-size: 0.78rem;
+  color: #64748b;
+}
+
+.dash-client-payment {
+  font-size: 0.8rem;
   color: #64748b;
 }
 

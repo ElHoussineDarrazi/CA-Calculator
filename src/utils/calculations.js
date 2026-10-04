@@ -1,5 +1,14 @@
 import { createId } from './uuid';
 
+/** Délai de paiement par défaut du client, en jours (30, 45, 60…). */
+export const DEFAULT_PAYMENT_DAYS = 30;
+
+/** Délai de paiement d'un client, en jours, avec repli sur la valeur par défaut. */
+export function getPaymentDays(client) {
+  const days = toNumber(client?.paymentDays);
+  return days > 0 ? days : DEFAULT_PAYMENT_DAYS;
+}
+
 export function toNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -105,6 +114,7 @@ export function createEmptyClient(name = 'Nouveau client') {
     endDate: '',
     tjm: 0,
     commissionPercent: 85,
+    paymentDays: DEFAULT_PAYMENT_DAYS,
     recuperationsPortage: [],
     months: {},
   };
@@ -124,27 +134,82 @@ export function sumRecuperationsPortage(client) {
   return list.reduce((sum, entry) => sum + toNumber(entry.amount), 0);
 }
 
-export function normalizeClient(client) {
-  if (Array.isArray(client.recuperationsPortage)) {
-    return {
-      ...client,
-      recuperationsPortage: sortRecuperationsByDate(client.recuperationsPortage),
-    };
-  }
-  const legacy = toNumber(client.recupererPortage);
-  return {
-    ...client,
-    recuperationsPortage:
-      legacy > 0
-        ? [
-            {
-              id: createId(),
-              amount: legacy,
-              date: new Date().toISOString().slice(0, 10),
-            },
-          ]
-        : [],
+/**
+ * Trie une liste de clients pour l'affichage des onglets.
+ * `criterion` : 'start' (date de contrat/début), 'end' (date de fin),
+ * 'name' (ordre alphabétique). Les clients sans date valide passent en fin de liste.
+ */
+export function sortClients(clients, criterion = 'start') {
+  const list = [...(clients || [])];
+
+  const dateOf = (client) => {
+    const raw = criterion === 'end' ? client.endDate : client.startDate;
+    if (!raw) return NaN;
+    const time = new Date(`${raw}T00:00:00`).getTime();
+    return Number.isFinite(time) ? time : NaN;
   };
+
+  return list.sort((a, b) => {
+    if (criterion === 'name') {
+      return (a.name || '').trim().localeCompare((b.name || '').trim(), 'fr');
+    }
+    const timeA = dateOf(a);
+    const timeB = dateOf(b);
+    const validA = Number.isFinite(timeA);
+    const validB = Number.isFinite(timeB);
+    if (validA && validB) return timeA - timeB;
+    if (validA) return -1;
+    if (validB) return 1;
+    return 0;
+  });
+}
+
+/**
+ * Vrai si le client a payé tous les mois de sa mission (au moins un mois,
+ * et chaque mois généré par les dates de début/fin est marqué payé).
+ * Les mois sans montant sont ignorés.
+ */
+export function isClientFullyPaid(client) {
+  const months = getMonthsFromStart(client?.startDate, client?.endDate);
+  if (months.length === 0) return false;
+
+  const entries = client.months || {};
+  let hasBilledMonth = false;
+
+  for (const month of months) {
+    const entry = entries[month.key];
+    if (toNumber(entry?.daysWorked) <= 0) continue;
+    hasBilledMonth = true;
+    if (!entry?.paid) return false;
+  }
+
+  return hasBilledMonth;
+}
+
+export function normalizeClient(client) {
+  const base = Array.isArray(client.recuperationsPortage)
+    ? {
+        ...client,
+        recuperationsPortage: sortRecuperationsByDate(client.recuperationsPortage),
+      }
+    : (() => {
+        const legacy = toNumber(client.recupererPortage);
+        return {
+          ...client,
+          recuperationsPortage:
+            legacy > 0
+              ? [
+                  {
+                    id: createId(),
+                    amount: legacy,
+                    date: new Date().toISOString().slice(0, 10),
+                  },
+                ]
+              : [],
+        };
+      })();
+
+  return { ...base, paymentDays: getPaymentDays(base) };
 }
 
 export function summarizeClient(client) {
@@ -162,6 +227,8 @@ export function computeClientSummaries(clients) {
     return {
       id: client.id,
       name: client.name?.trim() || 'Sans nom',
+      // Date de contrat brute (AAAA-MM-JJ), utilisée pour le tri des tooltips.
+      startDateSort: client.startDate || '',
       ...summary,
     };
   });

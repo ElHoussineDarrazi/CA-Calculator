@@ -7,6 +7,7 @@ import {
   computeGlobalSummary,
   createEmptyClient,
   normalizeClient,
+  sortClients,
 } from './utils/calculations';
 import { confirmDelete } from './utils/confirm';
 import { isFirebaseConfigured } from './firebase/env';
@@ -31,6 +32,8 @@ export default function App({ authUser = null }) {
   const [cloudPending, setCloudPending] = useState(false);
   const [syncError, setSyncError] = useState(null);
   const [transferNotice, setTransferNotice] = useState(null);
+  // Ordre d'affichage des onglets clients : par défaut, date de contrat croissante.
+  const [sortCriterion, setSortCriterion] = useState('start');
   const lastSavedRef = useRef(null);
   const isDirtyRef = useRef(false);
   const dataRef = useRef(data);
@@ -276,6 +279,10 @@ export default function App({ authUser = null }) {
   }, []);
 
   const globalSummary = computeGlobalSummary(data.clients);
+  const sortedClients = useMemo(
+    () => sortClients(data.clients, sortCriterion),
+    [data.clients, sortCriterion],
+  );
   const clientSummaries = useMemo(
     () => computeClientSummaries(data.clients),
     [data.clients],
@@ -419,11 +426,13 @@ export default function App({ authUser = null }) {
       )}
 
       <TabBar
-        clients={data.clients}
+        clients={sortedClients}
         activeClientId={data.activeClientId}
         onSelect={setActiveClient}
         onAdd={addClient}
         onRemove={removeClient}
+        sortCriterion={sortCriterion}
+        onSortChange={setSortCriterion}
       />
 
       {activeClient ? (

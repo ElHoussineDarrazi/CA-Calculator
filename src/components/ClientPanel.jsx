@@ -1,6 +1,8 @@
 import {
+  DEFAULT_PAYMENT_DAYS,
   formatCurrency,
   getMonthMontant,
+  getPaymentDays,
   getMonthRestePercent,
   getMonthsFromStart,
   summarizeClient,
@@ -71,7 +73,32 @@ export default function ClientPanel({ client, onUpdateClient, onUpdateMonth }) {
             placeholder="85"
           />
         </div>
+        <div className="form-group">
+          <label htmlFor="payment-days">Délai de paiement (jours)</label>
+          <input
+            id="payment-days"
+            type="number"
+            min="0"
+            step="1"
+            list="payment-days-options"
+            value={client.paymentDays || ''}
+            onChange={(e) =>
+              onUpdateClient(client.id, { paymentDays: toNumber(e.target.value) })
+            }
+            placeholder={String(DEFAULT_PAYMENT_DAYS)}
+          />
+          <datalist id="payment-days-options">
+            <option value="15" />
+            <option value="30" />
+            <option value="45" />
+            <option value="60" />
+          </datalist>
+        </div>
       </div>
+
+      <p className="formula-hint">
+        Le client paie chaque mois {getPaymentDays(client)} jours après la fin du mois
+      </p>
 
       <p className="formula-hint">
         Montant = (TJM × jours travaillés) × reste en % — Total CA = somme des montants de cet onglet

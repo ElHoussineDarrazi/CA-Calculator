@@ -1,4 +1,14 @@
-export default function TabBar({ clients, activeClientId, onSelect, onAdd, onRemove }) {
+import { isClientFullyPaid } from '../utils/calculations';
+
+export default function TabBar({
+  clients,
+  activeClientId,
+  onSelect,
+  onAdd,
+  onRemove,
+  sortCriterion = 'start',
+  onSortChange,
+}) {
   return (
     <div className="tab-bar">
       {clients.map((client) => (
@@ -8,6 +18,15 @@ export default function TabBar({ clients, activeClientId, onSelect, onAdd, onRem
             className={`tab ${client.id === activeClientId ? 'active' : ''}`}
             onClick={() => onSelect(client.id)}
           >
+            {isClientFullyPaid(client) && (
+              <span
+                className="tab-paid-dot"
+                title="Tous les mois sont payés"
+                aria-label="Tous les mois sont payés"
+              >
+                ●
+              </span>
+            )}
             {client.name || 'Sans nom'}
             {clients.length > 1 && (
               <span
@@ -35,6 +54,20 @@ export default function TabBar({ clients, activeClientId, onSelect, onAdd, onRem
       <button type="button" className="tab-add" onClick={onAdd} title="Ajouter un client">
         +
       </button>
+      {onSortChange && (
+        <label className="tab-sort">
+          Trier par
+          <select
+            value={sortCriterion}
+            onChange={(e) => onSortChange(e.target.value)}
+            title="Ordre d'affichage des onglets clients"
+          >
+            <option value="start">Date de contrat</option>
+            <option value="end">Date de fin</option>
+            <option value="name">Nom (A→Z)</option>
+          </select>
+        </label>
+      )}
     </div>
   );
 }
